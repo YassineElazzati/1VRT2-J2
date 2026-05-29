@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche de révision QCM — Virtualisation</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-soft: #161b22;
+    --bg-card: #1c2128;
+    --bg-card-2: #21262d;
+    --border: #30363d;
+    --border-strong: #484f58;
+    --ink: #e6edf3;
+    --ink-soft: #b1bac4;
+    --ink-mute: #7d8590;
+    --cyan: #39d0d8;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --purple: #a371f7;
+    --blue: #58a6ff;
+    --grid-line: rgba(57, 208, 216, 0.06);
+    --font-mono: "SF Mono", "JetBrains Mono", "Consolas", "Menlo", monospace;
+    --font-sans: -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+    --font-display: "Helvetica Neue", -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1000px;
+    height: 600px;
+    background: radial-gradient(ellipse at center, rgba(57, 208, 216, 0.06), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 28px 16px 28px 22px;
+    border-right: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+    font-family: var(--font-mono);
+  }
+  nav.toc .toc-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  nav.toc .toc-title::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  nav.toc ol { list-style: none; padding: 0; margin: 0; }
+  nav.toc ol li { margin-bottom: 7px; font-size: 12px; line-height: 1.35; }
+  nav.toc ol li a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    display: block;
+    padding: 3px 0 3px 14px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  nav.toc ol li a::before {
+    content: "›";
+    color: var(--cyan);
+    position: absolute;
+    left: 0;
+    opacity: 0.6;
+  }
+  nav.toc ol li a:hover { color: var(--cyan); padding-left: 18px; }
+  main { padding: 36px 42px 60px; counter-reset: section; }
+
+  header.banner {
+    padding: 24px 0 22px;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--cyan);
+  }
+  header.banner .formation {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 8px;
+  }
+  header.banner .formation::before { content: "// "; color: var(--ink-mute); }
+  header.banner h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 1.1;
+    margin: 0 0 10px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  header.banner h1 .accent { color: var(--cyan); font-style: italic; font-weight: 400; }
+  header.banner .subtitle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-mute);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  header.banner .subtitle span::before { content: "> "; color: var(--green); }
+
+  h2 {
+    counter-increment: section;
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 40px 0 14px;
+    padding-top: 14px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    letter-spacing: -0.01em;
+    border-top: 1px solid var(--border);
+  }
+  h2::before {
+    content: counter(section, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--cyan);
+    background: rgba(57, 208, 216, 0.1);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    margin: 22px 0 10px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  p { margin: 0 0 10px; color: var(--ink-soft); }
+  ul, ol { margin: 0 0 12px; padding-left: 20px; color: var(--ink-soft); }
+  ul li, ol li { margin-bottom: 4px; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--cyan); font-style: italic; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--bg-card);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--cyan);
+    border: 1px solid var(--border);
+  }
+
+  /* === TABLEAUX COMPACTS === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-size: 13px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  tr:last-child td { border-bottom: none; }
+  th {
+    background: var(--bg-card-2);
+    color: var(--cyan);
+    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 9px 12px;
+  }
+  tr:hover td { background: rgba(57, 208, 216, 0.03); }
+  td strong { color: var(--ink); }
+
+  /* === BLOCS FLASH === */
+  .flash {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 3px solid;
+    background: var(--bg-card);
+    border-radius: 3px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .flash::before {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    margin-right: 10px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    vertical-align: middle;
+  }
+  .flash p { display: inline; color: var(--ink-soft); margin: 0; }
+  .flash strong { color: var(--ink); }
+  .flash.warn { border-color: var(--amber); background: rgba(210,153,34,0.05); }
+  .flash.warn::before { content: "PIEGE"; color: var(--amber); background: rgba(210,153,34,0.15); }
+  .flash.tip { border-color: var(--blue); background: rgba(88,166,255,0.05); }
+  .flash.tip::before { content: "ASTUCE"; color: var(--blue); background: rgba(88,166,255,0.15); }
+  .flash.key { border-color: var(--green); background: rgba(63,185,80,0.05); }
+  .flash.key::before { content: "CLE"; color: var(--green); background: rgba(63,185,80,0.15); }
+  .flash.cmd { border-color: var(--purple); background: rgba(163,113,247,0.05); }
+  .flash.cmd::before { content: "CMD"; color: var(--purple); background: rgba(163,113,247,0.15); }
+
+  /* === GRILLE 2 COLONNES === */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0;
+  }
+  .grid-2 > div {
+    background: var(--bg-card);
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .grid-2 h4 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+  }
+
+  /* === CHIFFRES CLES === */
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .number-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--cyan);
+    padding: 12px 10px;
+    border-radius: 3px;
+    text-align: center;
+  }
+  .number-card .val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--cyan);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .number-card .lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+  }
+
+  /* === ANCHRES === */
+  h2[id], h3[id] { scroll-margin-top: 16px; }
+
+  /* === FOOTER === */
+  .footer {
+    margin-top: 60px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+  .footer::before { content: "// "; color: var(--cyan); }
+
+  /* === BADGES MODE === */
+  .mb {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 2px 7px;
+    border: 1px solid;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .mb.nat    { color: var(--green);  border-color: var(--green);  background: rgba(63,185,80,0.1); }
+  .mb.bridge { color: var(--blue);   border-color: var(--blue);   background: rgba(88,166,255,0.1); }
+  .mb.host   { color: var(--purple); border-color: var(--purple); background: rgba(163,113,247,0.1); }
+  .mb.intern { color: var(--amber);  border-color: var(--amber);  background: rgba(210,153,34,0.1); }
+  .mb.t1     { color: var(--red);    border-color: var(--red);    background: rgba(248,81,73,0.1); }
+  .mb.t2     { color: var(--blue);   border-color: var(--blue);   background: rgba(88,166,255,0.1); }
+
+  /* === IMPRESSION === */
+  @media print {
+    body { background: white; color: black; font-size: 11px; }
+    body::before { display: none; }
+    nav.toc { display: none; }
+    .layout { grid-template-columns: 1fr; max-width: none; }
+    main { padding: 0; }
+    h2 { page-break-after: avoid; color: black; border-color: #999; }
+    h2::before { color: black; background: #eee; }
+    .flash, table, .grid-2 > div, .number-card {
+      background: white; border-color: #999; color: black;
+    }
+    th { background: #eee; color: black; }
+    td, p, ul li, ol li { color: #222; }
+    strong { color: black; }
+    code { background: #f5f5f5; border-color: #ccc; color: #000; }
+    .number-card .val { color: #000; }
+    .footer { color: #666; }
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 24px 18px 50px; }
+    header.banner h1 { font-size: 24px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .numbers-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc">
+  <div class="toc-title">Navigation</div>
+  <ol>
+    <li><a href="#chiffres">Chiffres-clés à mémoriser</a></li>
+    <li><a href="#fondamentaux">Fondamentaux</a></li>
+    <li><a href="#hyperviseurs">Types d'hyperviseurs</a></li>
+    <li><a href="#produits">Produits du marché</a></li>
+    <li><a href="#install">Installation VirtualBox</a></li>
+    <li><a href="#dimensionnement">Dimensionnement VM</a></li>
+    <li><a href="#disques">Disques virtuels</a></li>
+    <li><a href="#reseaux">4 modes réseau</a></li>
+    <li><a href="#commandes-net">Commandes réseau</a></li>
+    <li><a href="#snapshots">Snapshots</a></li>
+    <li><a href="#clonage">Clonage</a></li>
+    <li><a href="#migration">Migration &amp; HA</a></li>
+    <li><a href="#vsphere">VMware vSphere</a></li>
+    <li><a href="#commandes-recap">Récap commandes</a></li>
+    <li><a href="#pieges">Top pièges QCM</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <header class="banner">
+    <div class="formation">1VRT2 · Virtualisation · Fiche de révision QCM · 60 questions</div>
+    <h1>Fiche antisèche<br><span class="accent">Tout le QCM en une page</span></h1>
+    <div class="subtitle">
+      <span>Jour 1 + Jour 2</span>
+      <span>Organisée par thèmes</span>
+      <span>Imprimable</span>
+    </div>
+  </header>
+
+  <!-- ====================================================== -->
+  <h2 id="chiffres">Chiffres-clés à mémoriser</h2>
+  <p>Les 8 chiffres-clés à retenir absolument. <strong>Plus de la moitié du QCM se joue sur la mémorisation de ces valeurs exactes.</strong></p>
+
+  <div class="numbers-grid">
+    <div class="number-card"><div class="val">10-20 %</div><div class="lbl">Utilisation serveur SANS virtualisation</div></div>
+    <div class="number-card"><div class="val">70-80 %</div><div class="lbl">Utilisation serveur AVEC virtualisation</div></div>
+    <div class="number-card"><div class="val">50-70 %</div><div class="lbl">Réduction des coûts d'infrastructure</div></div>
+    <div class="number-card"><div class="val">90 %</div><div class="lbl">Serveurs entreprise virtualisés (Gartner)</div></div>
+    <div class="number-card"><div class="val">75 %</div><div class="lbl">Part de marché VMware en Fortune 500</div></div>
+    <div class="number-card"><div class="val">50-60 %</div><div class="lbl">RAM max allouable aux VM</div></div>
+    <div class="number-card"><div class="val">50-75 %</div><div class="lbl">CPU max allouable aux VM</div></div>
+    <div class="number-card"><div class="val">10.0.2.15</div><div class="lbl">IP attribuée à toute VM en mode NAT</div></div>
+  </div>
+
+  <div class="flash key"><p><strong>Astuce mémo :</strong> 10-20 % = AVANT, 70-80 % = APRÈS. 50-60 % RAM, 50-75 % CPU. Si vous voyez « 100 % » dans un QCM, c'est <strong>toujours faux</strong>.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="fondamentaux">Fondamentaux de la virtualisation</h2>
+
+  <table>
+    <tr><th>Notion</th><th>Définition</th></tr>
+    <tr><td><strong>Virtualisation</strong></td><td>Technologie permettant de créer des <strong>versions virtuelles</strong> de ressources physiques (serveurs, stockage, réseau).</td></tr>
+    <tr><td><strong>Host (Hôte)</strong></td><td>La machine <strong>physique</strong> qui fournit les ressources matérielles réelles (CPU, RAM, disque).</td></tr>
+    <tr><td><strong>Guest (Invité)</strong></td><td>La machine <strong>virtuelle</strong> (VM) qui s'exécute sur l'hôte avec son propre OS.</td></tr>
+    <tr><td><strong>Hyperviseur</strong></td><td>Couche logicielle qui crée, gère et isole les VM, et répartit les ressources du Host entre elles.</td></tr>
+    <tr><td><strong>Isolation</strong></td><td>Chaque VM est indépendante. Si une VM plante, les autres continuent normalement.</td></tr>
+  </table>
+
+  <h3>Ce que chaque VM possède en propre</h3>
+  <ul>
+    <li>Son propre <strong>système d'exploitation</strong> complet et indépendant</li>
+    <li>Ses propres <strong>applications</strong></li>
+    <li>Ses ressources virtuelles : <strong>vCPU</strong>, <strong>vRAM</strong>, <strong>disque virtuel</strong> (.vdi), <strong>carte réseau virtuelle</strong></li>
+  </ul>
+
+  <h3>Avantages clés</h3>
+  <table>
+    <tr><th>Avantage</th><th>Détail / Chiffre</th></tr>
+    <tr><td><strong>Optimisation matériel</strong></td><td>10-20 % → 70-80 % d'utilisation des ressources</td></tr>
+    <tr><td><strong>Réduction coûts</strong></td><td>50-70 % d'économies (matériel, énergie, maintenance)</td></tr>
+    <tr><td><strong>Empreinte carbone</strong></td><td>Moins de serveurs physiques = moins d'électricité et de climatisation</td></tr>
+    <tr><td><strong>Isolation</strong></td><td>Un crash de VM n'affecte pas les autres</td></tr>
+    <tr><td><strong>Adoption marché</strong></td><td>~90 % des serveurs d'entreprise virtualisés (Gartner)</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Faux mais piégeant :</strong> « la virtualisation élimine le besoin de matériel physique » (non, elle l'optimise) ; « rend les serveurs invulnérables aux pannes » (non) ; « supprime le besoin d'OS dans les VM » (non, chaque VM a son OS).</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="hyperviseurs">Types d'hyperviseurs</h2>
+
+  <table>
+    <tr><th>Critère</th><th><span class="mb t1">TYPE 1</span> bare-metal</th><th><span class="mb t2">TYPE 2</span> hosted</th></tr>
+    <tr><td><strong>Installation</strong></td><td>Directement sur le matériel</td><td>Sur un OS existant (Win/macOS/Linux)</td></tr>
+    <tr><td><strong>Performance</strong></td><td>Meilleure (accès direct au hardware)</td><td>Inférieure (couche OS intermédiaire)</td></tr>
+    <tr><td><strong>Usage</strong></td><td>Production, datacenters</td><td>Dev, tests, formation</td></tr>
+    <tr><td><strong>Inconvénients</strong></td><td>Matériel dédié, complexité, licences coûteuses</td><td>Performance moindre</td></tr>
+    <tr><td><strong>Exemples</strong></td><td>VMware ESXi, Hyper-V, Proxmox VE, Xen</td><td>VirtualBox, VMware Workstation/Fusion, Parallels</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Pièges récurrents :</strong> Type 0 et Type 3 <strong>n'existent pas</strong>. VirtualBox est <strong>Type 2</strong>, jamais Type 1. ESXi est <strong>Type 1</strong>, jamais Type 2.</p></div>
+
+  <div class="flash tip"><p><strong>Astuce mémo :</strong> Type 1 = touche le métal (<em>bare-metal</em>). Type 2 = a un OS en dessous (<em>hosted</em>). VirtualBox sur votre PC ? Il y a Windows dessous → Type 2.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="produits">Produits du marché à connaître</h2>
+
+  <table>
+    <tr><th>Produit</th><th>Type</th><th>Caractéristique distinctive</th></tr>
+    <tr><td><strong>VMware ESXi</strong></td><td>Type 1</td><td>Leader datacenter, ~75 % Fortune 500, payant</td></tr>
+    <tr><td><strong>VMware vSphere</strong></td><td>Type 1 (suite)</td><td>ESXi + vCenter + vMotion + DRS + HA, très coûteux</td></tr>
+    <tr><td><strong>Microsoft Hyper-V</strong></td><td>Type 1</td><td>Intégré à Windows Server, <strong>inclus dans la licence</strong></td></tr>
+    <tr><td><strong>Proxmox VE</strong></td><td>Type 1</td><td><strong>Gratuit, open-source, basé Debian + KVM</strong>, populaire chez hébergeurs</td></tr>
+    <tr><td><strong>Citrix XenServer</strong></td><td>Type 1</td><td>Basé sur Xen, environnements cloud</td></tr>
+    <tr><td><strong>Oracle VirtualBox</strong></td><td>Type 2</td><td><strong>Gratuit, open-source, multi-plateforme</strong> (Win/macOS/Linux)</td></tr>
+    <tr><td><strong>VMware Workstation</strong></td><td>Type 2</td><td>Bureau professionnel Windows/Linux, payant</td></tr>
+    <tr><td><strong>VMware Fusion</strong></td><td>Type 2</td><td>Version macOS de Workstation</td></tr>
+    <tr><td><strong>Parallels Desktop</strong></td><td>Type 2</td><td>Optimisé <strong>Apple Silicon</strong> (M1/M2/M3)</td></tr>
+  </table>
+
+  <div class="flash key"><p><strong>Question type :</strong> « Type 1 open-source basé KVM pour hébergeurs » → <strong>Proxmox VE</strong>. « Type 2 gratuit multi-plateforme » → <strong>VirtualBox</strong>. « Optimisé Mac ARM » → <strong>Parallels Desktop</strong>. « 75 % Fortune 500 » → <strong>VMware ESXi</strong>.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="install">Installation et vérification VirtualBox</h2>
+
+  <h3>Vérifier la virtualisation matérielle</h3>
+  <table>
+    <tr><th>OS</th><th>Commande</th><th>Sortie attendue</th></tr>
+    <tr><td>Windows</td><td><code>systeminfo | findstr /i "virtualization"</code></td><td>Lignes contenant « Virtualization Enabled In Firmware: Yes »</td></tr>
+    <tr><td>Linux</td><td><code>egrep -c '(vmx|svm)' /proc/cpuinfo</code></td><td>Nombre &gt; 0 (= nombre de threads supportant VT-x/AMD-V)</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Piège ULTIME :</strong> ces commandes <strong>LISENT</strong> seulement. Elles n'<em>activent</em> rien, n'<em>installent</em> rien, ne <em>désactivent</em> Hyper-V de rien. <strong>Aucune commande OS ne modifie le BIOS</strong> — pour activer VT-x, il faut entrer dans le BIOS au démarrage.</p></div>
+
+  <h3>Technologies de virtualisation matérielle</h3>
+  <table>
+    <tr><th>Constructeur</th><th>Nom commercial</th><th>Marqueur</th></tr>
+    <tr><td>Intel</td><td><strong>VT-x</strong> (Virtualization Technology)</td><td><code>vmx</code> dans /proc/cpuinfo</td></tr>
+    <tr><td>AMD</td><td><strong>AMD-V</strong> (Secure Virtual Machine)</td><td><code>svm</code> dans /proc/cpuinfo</td></tr>
+  </table>
+
+  <h3>VBoxManage et Extension Pack</h3>
+  <table>
+    <tr><th>Élément</th><th>Détail</th></tr>
+    <tr><td><code>VBoxManage --version</code></td><td>Affiche la version installée (en lecture seule, n'installe rien)</td></tr>
+    <tr><td><strong>VirtualBox Extension Pack</strong></td><td>Ajoute : <strong>USB 2.0/3.0</strong>, <strong>chiffrement AES</strong>, <strong>boot PXE Intel</strong>, <strong>accès RDP distant</strong>. Gratuit pour usage éducatif.</td></tr>
+    <tr><td><code>sudo usermod -aG vboxusers $USER</code></td><td>Ajoute l'utilisateur au groupe vboxusers (USB). Le flag <code>-a</code> = append (sans lui, on remplace tous les groupes).</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Le piège <code>-aG</code> :</strong> sans le <strong>-a</strong>, <code>usermod -G vboxusers $USER</code> <em>remplacerait</em> tous vos groupes par vboxusers seulement. On perdrait sudo, audio, video, etc. Le <strong>-a</strong> = <em>append</em> = <em>ajouter sans retirer</em>.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="dimensionnement">Dimensionnement d'une VM</h2>
+
+  <div class="grid-2">
+    <div>
+      <h4>RAM</h4>
+      <p><strong>Maximum 50-60 %</strong> de la RAM totale aux VM.</p>
+      <p>Ex. PC 8 GB → max 4-5 GB aux VM.</p>
+      <p>Garder 40-50 % pour l'OS hôte et l'hyperviseur.</p>
+    </div>
+    <div>
+      <h4>CPU</h4>
+      <p><strong>Maximum 50-75 %</strong> des cœurs aux VM.</p>
+      <p>Ex. 4 cœurs → max 2-3 vCPU aux VM.</p>
+      <p>La virtualisation ne crée pas de cœurs — elle les partage.</p>
+    </div>
+  </div>
+
+  <div class="flash warn"><p><strong>Pièges :</strong> « 100 % RAM aux VM » = faux (crash hôte). « 4 cœurs aux VM sur 4 » = faux (hôte étouffé). « Virtualisation double le nombre de cœurs » = faux (elle les partage, ne les crée pas).</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="disques">Disques virtuels</h2>
+
+  <h3>Formats de disque virtuel</h3>
+  <table>
+    <tr><th>Format</th><th>Natif de</th><th>Notes</th></tr>
+    <tr><td><strong>.vdi</strong></td><td>VirtualBox</td><td>VirtualBox Disk Image — <strong>format natif et par défaut</strong></td></tr>
+    <tr><td>.vmdk</td><td>VMware</td><td>Lu aussi par VirtualBox</td></tr>
+    <tr><td>.vhd / .vhdx</td><td>Microsoft Hyper-V</td><td>Lu aussi par VirtualBox</td></tr>
+    <tr><td>.iso</td><td>—</td><td>Image CD/DVD, <strong>PAS un disque dur virtuel</strong></td></tr>
+  </table>
+
+  <h3>Dynamique vs Taille fixe</h3>
+  <table>
+    <tr><th>Type</th><th>Comportement</th><th>Avantage / Inconvénient</th></tr>
+    <tr><td><strong>Dynamique</strong></td><td>Le fichier grandit au fur et à mesure des besoins</td><td>+ Économise de l'espace sur l'hôte / − Légèrement plus lent en écriture</td></tr>
+    <tr><td><strong>Taille fixe</strong></td><td>Pré-alloue immédiatement toute la taille annoncée</td><td>+ Légèrement plus rapide / − Occupe tout l'espace dès la création</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Confusion classique :</strong> ce n'est <strong>PAS</strong> le dynamique qui pré-alloue, c'est le <strong>fixe</strong>. Le dynamique grandit au fil de l'utilisation.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="reseaux">Les 4 modes réseau VirtualBox</h2>
+
+  <table>
+    <tr>
+      <th>Critère</th>
+      <th><span class="mb nat">NAT</span></th>
+      <th><span class="mb bridge">BRIDGE</span></th>
+      <th><span class="mb host">HOST-ONLY</span></th>
+      <th><span class="mb intern">INTERNAL</span></th>
+    </tr>
+    <tr><td><strong>Internet</strong></td><td>OUI</td><td>OUI</td><td>NON</td><td>NON</td></tr>
+    <tr><td><strong>VM ↔ Hôte</strong></td><td>NON (sauf redirection)</td><td>OUI</td><td>OUI</td><td>NON</td></tr>
+    <tr><td><strong>VM ↔ VM</strong></td><td>NON</td><td>OUI</td><td>OUI</td><td>OUI</td></tr>
+    <tr><td><strong>Visible LAN externe</strong></td><td>NON</td><td>OUI</td><td>NON</td><td>NON</td></tr>
+    <tr><td><strong>IP attribuée</strong></td><td><code>10.0.2.15</code></td><td>Routeur du LAN (192.168.x.x)</td><td>VirtualBox DHCP (192.168.56.x)</td><td>Aucune (manuel)</td></tr>
+    <tr><td><strong>Analogie</strong></td><td>Le facteur</td><td>Nouveau voisin du quartier</td><td>Téléphone maison-cabane</td><td>Talkies-walkies entre enfants</td></tr>
+    <tr><td><strong>Cas d'usage</strong></td><td>Dev isolé, navigation</td><td>Serveur visible sur LAN</td><td><strong>Analyse de malwares</strong>, SSH d'admin</td><td>Backend isolé, multi-VM</td></tr>
+  </table>
+
+  <div class="flash key"><p><strong>Question type :</strong> « Quel mode pour analyser un malware ? » → <strong>Host-only</strong> (pas d'Internet pour la propagation, mais observation possible depuis l'hôte).</p></div>
+
+  <div class="flash tip"><p><strong>Pattern entreprise :</strong> double carte réseau = <strong>Bridge</strong> (trafic applicatif/Internet) + <strong>Host-only</strong> (management SSH stable). Le Host-only ne dépend pas du réseau externe — utile si le WiFi change.</p></div>
+
+  <div class="flash warn"><p><strong>Accès web à une VM en NAT depuis l'hôte :</strong> il faut une <strong>redirection de port</strong> (ex. port hôte 8080 → port invité 80). L'IP 10.0.2.15 n'est pas joignable directement.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="commandes-net">Commandes réseau Ubuntu</h2>
+
+  <table>
+    <tr><th>Commande</th><th>Rôle</th></tr>
+    <tr><td><code>ip addr show</code></td><td>Affiche toutes les interfaces réseau et leurs IP (lecture seule)</td></tr>
+    <tr><td><code>sudo systemctl restart systemd-networkd</code></td><td>Redémarre le service réseau (force un nouveau DHCP request)</td></tr>
+    <tr><td><code>sudo apt install -y apache2</code></td><td>Installe Apache. <code>-y</code> = accepter la confirmation auto</td></tr>
+    <tr><td><code>sudo systemctl status apache2</code></td><td>Vérifie l'état du service (active / running ?)</td></tr>
+    <tr><td><code>sudo ufw allow 80/tcp</code></td><td>Autorise les connexions entrantes port 80 TCP (HTTP) dans UFW</td></tr>
+    <tr><td><code>sudo netplan apply</code></td><td>Applique la configuration réseau définie dans /etc/netplan/*.yaml</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Pièges classiques :</strong> <code>apt install</code> installe (ne met pas à jour, c'est <code>apt upgrade</code>). <code>systemctl status</code> est en lecture seule (n'arrête, ne redémarre rien). <code>ufw allow</code> ouvre un port (le bloquer, c'est <code>ufw deny</code>).</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="snapshots">Snapshots</h2>
+
+  <table>
+    <tr><th>Notion</th><th>Définition</th></tr>
+    <tr><td><strong>Snapshot</strong></td><td>Sauvegarde instantanée de l'<strong>état complet</strong> d'une VM : disque + RAM (si la VM tourne) + configuration</td></tr>
+    <tr><td><strong>Snapshot vs Sauvegarde</strong></td><td>Snapshot = <strong>incrémental</strong>, rapide, quasi instantané. Sauvegarde complète = <strong>copie entière</strong> du disque, lent, plus volumineux</td></tr>
+    <tr><td><strong>Quand l'utiliser ?</strong></td><td><strong>Avant une mise à jour ou modification risquée</strong> (rollback instantané possible)</td></tr>
+    <tr><td><strong>Pourquoi nettoyer ?</strong></td><td>Les snapshots <strong>consomment de l'espace disque croissant</strong> et peuvent ralentir les I/O de la VM</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Confusions à éviter :</strong> un snapshot n'est <em>pas</em> une capture d'écran, n'est <em>pas</em> une copie indépendante (c'est lié à la VM), n'est <em>pas</em> un rapport de performance.</p></div>
+
+  <div class="flash cmd"><p><strong>Astuce TP :</strong> créer un fichier témoin avant snapshot avec <code>echo "État initial" &gt; ~/test-snapshot.txt</code> pour vérifier ensuite que la restauration a bien fonctionné.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="clonage">Clonage de VM</h2>
+
+  <table>
+    <tr><th>Type de clone</th><th>Caractéristique</th></tr>
+    <tr><td><strong>Clone complet</strong></td><td>Copie totalement <strong>indépendante</strong>. Autonome, portable, mais volumineux.</td></tr>
+    <tr><td><strong>Clone lié</strong></td><td><strong>Partage le disque de base</strong> de l'original. Stocke uniquement les différences. Léger mais dépendant.</td></tr>
+  </table>
+
+  <div class="flash key"><p><strong>Règle d'or du clonage :</strong> toujours <strong>générer de nouvelles adresses MAC</strong> lors du clonage. Deux MAC identiques sur le même réseau = <strong>conflit</strong>. C'est une obligation, pas une suggestion.</p></div>
+
+  <div class="flash cmd"><p><strong>Renommer le hostname du clone</strong> (sinon deux machines portent le même nom sur le réseau) :</p>
+  <p><code>sudo hostnamectl set-hostname ubuntu-clone</code></p>
+  <p>Modification permanente, immédiate. Géré par systemd.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="migration">Migration et Haute Disponibilité</h2>
+
+  <h3>Migration à froid vs migration à chaud</h3>
+  <table>
+    <tr><th>Migration</th><th>Comportement</th><th>Outil</th></tr>
+    <tr><td><strong>À froid</strong></td><td>VM <strong>éteinte</strong> avant transfert. Interruption de service.</td><td>Export/import manuel</td></tr>
+    <tr><td><strong>À chaud</strong></td><td>VM <strong>en cours d'exécution</strong>, transfert progressif de la RAM. Interruption de quelques millisecondes.</td><td><strong>vMotion</strong> (VMware), Live Migration (Proxmox/KVM)</td></tr>
+  </table>
+
+  <h3>Haute Disponibilité (HA)</h3>
+  <table>
+    <tr><th>Composant</th><th>Rôle</th></tr>
+    <tr><td><strong>Cluster HA</strong></td><td>Plusieurs serveurs physiques qui partagent les VM et se surveillent mutuellement</td></tr>
+    <tr><td><strong>Heartbeat</strong></td><td>Signal régulier échangé entre serveurs pour détecter une panne en quelques secondes</td></tr>
+    <tr><td><strong>Stockage partagé (SAN)</strong></td><td><strong>Composant clé du HA.</strong> Tous les serveurs y accèdent simultanément. Sans SAN, pas de redémarrage automatique possible.</td></tr>
+    <tr><td><strong>Comportement en panne</strong></td><td>Les VM du serveur en panne sont <strong>automatiquement redémarrées</strong> sur les autres serveurs du cluster</td></tr>
+  </table>
+
+  <div class="flash warn"><p><strong>Pièges HA :</strong> les VM ne sont pas <em>perdues</em> (le SAN les conserve). Toutes les VM du cluster ne s'arrêtent pas (seules celles du serveur en panne migrent). Pas d'intervention humaine nécessaire (c'est automatisé).</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="vsphere">L'écosystème VMware vSphere</h2>
+
+  <table>
+    <tr><th>Composant</th><th>Rôle</th></tr>
+    <tr><td><strong>ESXi</strong></td><td>L'hyperviseur Type 1 installé sur chaque serveur physique</td></tr>
+    <tr><td><strong>vCenter</strong></td><td>Console centralisée de gestion de l'ensemble du cluster ESXi</td></tr>
+    <tr><td><strong>vMotion</strong></td><td>Migration <strong>à chaud</strong> d'une VM entre serveurs ESXi sans interruption</td></tr>
+    <tr><td><strong>Storage vMotion</strong></td><td>Déplace les <strong>disques virtuels</strong> entre différents datastores à chaud</td></tr>
+    <tr><td><strong>DRS</strong> (Distributed Resource Scheduler)</td><td>Équilibrage <strong>automatique</strong> de la charge entre serveurs via vMotion</td></tr>
+    <tr><td><strong>Fault Tolerance</strong></td><td>Réplique la VM <strong>en temps réel synchrone</strong> sur un serveur secondaire (continuité absolue)</td></tr>
+    <tr><td><strong>vSAN</strong></td><td>Stockage distribué et partagé de l'infrastructure VMware</td></tr>
+    <tr><td><strong>NSX</strong></td><td>Virtualisation réseau et micro-segmentation</td></tr>
+  </table>
+
+  <h3>Comparaison économique des solutions Type 1</h3>
+  <table>
+    <tr><th>Solution</th><th>Coût</th><th>Particularité</th></tr>
+    <tr><td><strong>VMware vSphere</strong></td><td>Très coûteux (licences/serveur/an)</td><td>Le plus complet, leader marché</td></tr>
+    <tr><td><strong>Microsoft Hyper-V</strong></td><td><strong>Inclus dans Windows Server</strong> (pas de surcoût licence)</td><td>Avantage majeur en environnement Microsoft</td></tr>
+    <tr><td><strong>Proxmox VE</strong></td><td><strong>Gratuit et open-source</strong></td><td>Basé Debian + KVM, support payant optionnel</td></tr>
+  </table>
+
+  <div class="flash key"><p><strong>Question type :</strong> « Migrer à chaud sans interruption » → <strong>vMotion</strong>. « Équilibrage automatique de charge » → <strong>DRS</strong>. « Tolérance de panne synchrone » → <strong>Fault Tolerance</strong>. « Console centralisée » → <strong>vCenter</strong>.</p></div>
+
+  <!-- ====================================================== -->
+  <h2 id="commandes-recap">Récapitulatif de toutes les commandes</h2>
+
+  <table>
+    <tr><th>Commande</th><th>Rôle</th><th>Lecture/Écriture</th></tr>
+    <tr><td><code>systeminfo | findstr /i "virtualization"</code></td><td>Vérifier VT-x sur Windows</td><td>Lecture</td></tr>
+    <tr><td><code>egrep -c '(vmx|svm)' /proc/cpuinfo</code></td><td>Vérifier VT-x/AMD-V sur Linux</td><td>Lecture</td></tr>
+    <tr><td><code>VBoxManage --version</code></td><td>Version de VirtualBox</td><td>Lecture</td></tr>
+    <tr><td><code>sudo usermod -aG vboxusers $USER</code></td><td>Ajouter au groupe vboxusers (USB)</td><td>Écriture</td></tr>
+    <tr><td><code>ip addr show</code></td><td>Voir interfaces et IP</td><td>Lecture</td></tr>
+    <tr><td><code>sudo systemctl restart systemd-networkd</code></td><td>Redémarrer service réseau</td><td>Écriture</td></tr>
+    <tr><td><code>sudo netplan apply</code></td><td>Appliquer config réseau YAML</td><td>Écriture</td></tr>
+    <tr><td><code>sudo apt install -y apache2</code></td><td>Installer Apache</td><td>Écriture</td></tr>
+    <tr><td><code>sudo systemctl status apache2</code></td><td>État du service Apache</td><td>Lecture</td></tr>
+    <tr><td><code>sudo ufw allow 80/tcp</code></td><td>Ouvrir port 80 dans le pare-feu</td><td>Écriture</td></tr>
+    <tr><td><code>sudo hostnamectl set-hostname X</code></td><td>Changer le nom d'hôte</td><td>Écriture</td></tr>
+    <tr><td><code>echo "texte" &gt; fichier.txt</code></td><td>Créer un fichier témoin</td><td>Écriture</td></tr>
+  </table>
+
+  <!-- ====================================================== -->
+  <h2 id="pieges">Top pièges de big GOLMON Tiépo </h2>
+
+  <div class="flash warn"><p><strong>1.</strong> Une commande de vérification (<code>systeminfo</code>, <code>egrep cpuinfo</code>, <code>VBoxManage --version</code>, <code>systemctl status</code>, <code>ip addr show</code>) <strong>ne modifie jamais rien</strong>. Si une option dit qu'elle « installe », « active », « désactive » ou « supprime » : c'est faux.</p></div>
+
+  <div class="flash warn"><p><strong>2.</strong> Aucune commande depuis l'OS ne peut <strong>activer la virtualisation dans le BIOS</strong>. L'activation se fait uniquement au démarrage du PC, dans le BIOS/UEFI.</p></div>
+
+  <div class="flash warn"><p><strong>3.</strong> <strong>Type 0 et Type 3 n'existent pas.</strong> Il n'y a que Type 1 (bare-metal) et Type 2 (hosted).</p></div>
+
+  <div class="flash warn"><p><strong>4.</strong> Tout pourcentage à <strong>100 %</strong> dans un QCM de virtualisation est faux. On garde toujours une marge pour l'hôte.</p></div>
+
+  <div class="flash warn"><p><strong>5.</strong> Le format <strong>VDI</strong> est le format natif <em>de VirtualBox</em>. VMDK = VMware. VHD = Hyper-V. ISO = image CD/DVD (PAS un disque dur virtuel).</p></div>
+
+  <div class="flash warn"><p><strong>6.</strong> Pour accéder à une VM en NAT depuis l'hôte → <strong>redirection de port</strong>. Pas via 10.0.2.15 directement, pas en désactivant le pare-feu.</p></div>
+
+  <div class="flash warn"><p><strong>7.</strong> Pour analyser un malware → <strong>Host-only</strong> (pas Internal, pas NAT, jamais Bridge).</p></div>
+
+  <div class="flash warn"><p><strong>8.</strong> Un snapshot capture <strong>l'état complet</strong> (disque + RAM + config). Pas une capture d'écran, pas une copie indépendante, pas un rapport de perf.</p></div>
+
+  <div class="flash warn"><p><strong>9.</strong> Lors d'un clonage, <strong>toujours générer de nouvelles adresses MAC</strong>. Sinon = conflit réseau garanti.</p></div>
+
+  <div class="flash warn"><p><strong>10.</strong> Dans un cluster HA : panne d'un serveur → les VM <strong>redémarrent automatiquement</strong> sur les autres serveurs grâce au <strong>SAN</strong> (stockage partagé) et au <strong>heartbeat</strong> (détection).</p></div>
+
+  <div class="flash warn"><p><strong>11.</strong> <strong>vMotion</strong> = migration à chaud. <strong>DRS</strong> = équilibrage automatique. <strong>Fault Tolerance</strong> = réplique synchrone. <strong>vCenter</strong> = console centralisée. Ne pas les confondre.</p></div>
+
+  <div class="flash warn"><p><strong>12.</strong> Proxmox est basé sur <strong>KVM</strong> (pas Docker, pas ESXi, pas Xen). KVM est intégré au <strong>kernel Linux</strong>.</p></div>
+
+  <div class="flash warn"><p><strong>13.</strong> Hyper-V est <strong>inclus dans Windows Server</strong> (gratuit pour qui a la licence Windows). Mais Hyper-V <em>lui-même</em> n'est pas open-source ni gratuit hors de Windows Server.</p></div>
+
+  <div class="flash warn"><p><strong>14.</strong> Le flag <code>-a</code> de <code>usermod -aG</code> est <strong>obligatoire</strong>. Sans lui, on perd tous les autres groupes de l'utilisateur.</p></div>
+
+  <div class="flash warn"><p><strong>15.</strong> En NAT, toutes les VM ont l'IP <strong>10.0.2.15</strong>. Ce n'est pas un bug : chaque VM est dans son propre réseau privé, isolée des autres.</p></div>
+
+  <div class="flash key"><p><strong>Le réflexe gagnant :</strong> avant de répondre, demandez-vous toujours (1) cette commande lit-elle ou modifie-t-elle l'état ? (2) le chiffre est-il dans la bonne fourchette ? (3) cette affirmation contient-elle un mot absolu (« toujours », « jamais », « 100 % », « éliminer », « supprimer ») ? Les mots absolus sont presque toujours faux.</p></div>
+
+  <div class="footer">Yassine El Azzati · 1VRT2 · Virtualisation · Fiche de révision QCM · J1 + J2</div>
+
+</main>
+</div>
+</body>
+</html>
