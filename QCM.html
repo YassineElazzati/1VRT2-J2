@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM de révision — Jour 1 — Virtualisation</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-soft: #161b22;
+    --bg-card: #1c2128;
+    --bg-card-2: #21262d;
+    --border: #30363d;
+    --border-strong: #484f58;
+
+    --ink: #e6edf3;
+    --ink-soft: #b1bac4;
+    --ink-mute: #7d8590;
+
+    --cyan: #39d0d8;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --purple: #a371f7;
+    --blue: #58a6ff;
+
+    --grid-line: rgba(57, 208, 216, 0.06);
+
+    --font-mono: "SF Mono", "JetBrains Mono", "Consolas", "Menlo", monospace;
+    --font-sans: -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+    --font-display: "Helvetica Neue", -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1000px;
+    height: 600px;
+    background: radial-gradient(ellipse at center, rgba(57, 208, 216, 0.08), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header.banner {
+    padding: 32px 0 28px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header.banner .formation {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 10px;
+  }
+  header.banner .formation::before {
+    content: "// ";
+    color: var(--ink-mute);
+  }
+
+  header.banner h1 {
+    font-family: var(--font-display);
+    font-size: 38px;
+    line-height: 1.1;
+    margin: 0 0 14px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  header.banner h1 .accent {
+    color: var(--cyan);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  header.banner .subtitle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-mute);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header.banner .subtitle span::before {
+    content: "> ";
+    color: var(--green);
+  }
+
+  .status-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(13, 17, 23, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    margin: 0 -32px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .status-progress { color: var(--ink-soft); }
+  .status-progress .answered { color: var(--cyan); font-weight: 700; }
+  .status-progress .total { color: var(--ink-mute); }
+
+  .status-score { color: var(--ink-mute); letter-spacing: 0.1em; }
+  .status-score.visible { color: var(--green); font-weight: 700; }
+  .status-score.bad { color: var(--amber); }
+
+  .block-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 48px 0 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .block-title .block-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--cyan);
+    background: rgba(57, 208, 216, 0.1);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+  }
+
+  .question {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 22px 26px;
+    margin: 18px 0;
+    transition: border-left-color 0.2s;
+  }
+
+  .question.answered { border-left-color: var(--cyan); }
+  .question.correct  { border-left-color: var(--green); }
+  .question.wrong    { border-left-color: var(--red); }
+
+  .question-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .q-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--cyan);
+    background: rgba(57, 208, 216, 0.1);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    flex-shrink: 0;
+  }
+
+  .q-text {
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .q-codehint {
+    margin: 12px 0 16px;
+    background: #0a0e14;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-card-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .option:hover {
+    border-color: var(--cyan);
+    background: rgba(57, 208, 216, 0.04);
+  }
+
+  .option input[type="radio"] {
+    margin-top: 3px;
+    accent-color: var(--cyan);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .option-letter {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+
+  .option.selected {
+    border-color: var(--cyan);
+    background: rgba(57, 208, 216, 0.06);
+    color: var(--ink);
+  }
+
+  .question.validated .option { cursor: default; pointer-events: none; }
+  .question.validated .option:hover { border-color: var(--border); background: var(--bg-card-2); }
+
+  .option.is-correct {
+    border-color: var(--green);
+    background: rgba(63, 185, 80, 0.1);
+    color: var(--ink);
+  }
+  .option.is-correct .option-letter { color: var(--green); }
+  .option.is-correct::after {
+    content: " <- BONNE REPONSE";
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--green);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-left: auto;
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .option.is-wrong {
+    border-color: var(--red);
+    background: rgba(248, 81, 73, 0.08);
+    color: var(--ink);
+  }
+  .option.is-wrong .option-letter { color: var(--red); }
+  .option.is-wrong::after {
+    content: " <- VOTRE REPONSE";
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--red);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-left: auto;
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .justification {
+    display: none;
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--bg-card-2);
+    border-left: 3px solid var(--cyan);
+    border-radius: 0 4px 4px 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .justification::before {
+    content: "EXPLICATION";
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 0.2em;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .question.validated .justification { display: block; }
+
+  .actions {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  button:hover:not(:disabled) { background: var(--cyan); color: var(--bg); }
+  button:disabled { color: var(--ink-mute); border-color: var(--border); cursor: not-allowed; }
+
+  button.primary { background: var(--cyan); color: var(--bg); }
+  button.primary:hover:not(:disabled) { background: transparent; color: var(--cyan); }
+
+  button.secondary { color: var(--ink-soft); border-color: var(--border); }
+  button.secondary:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-soft); background: var(--bg-card); }
+
+  .final-result {
+    display: none;
+    margin: 40px 0 0;
+    padding: 32px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cyan);
+    border-radius: 4px;
+    text-align: center;
+  }
+  .final-result.visible { display: block; }
+
+  .final-score {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .final-percent {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--ink-mute);
+    letter-spacing: 0.15em;
+    margin-bottom: 24px;
+  }
+  .final-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .final-breakdown > div {
+    background: var(--bg-card-2);
+    padding: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .final-breakdown .bk-block {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 0.15em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .final-breakdown .bk-score {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .final-tier {
+    margin-top: 20px;
+    font-size: 16px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-mute);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+  .footer::before { content: "// "; color: var(--cyan); }
+
+  @media (max-width: 700px) {
+    main { padding: 32px 18px 60px; }
+    header.banner h1 { font-size: 26px; }
+    .option { font-size: 14px; }
+    .option.is-correct::after, .option.is-wrong::after { display: none; }
+    .final-breakdown { grid-template-columns: 1fr; }
+    .status-bar { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <header class="banner">
+    <div class="formation">1VRT2 · Virtualisation · QCM de revision · Jour 1</div>
+    <h1>30 questions<br><span class="accent">pour valider vos acquis du Jour 1</span></h1>
+    <div class="subtitle">
+      <span>Choix unique par question</span>
+      <span>Correction instantanee au clic</span>
+      <span>Tentatives illimitees</span>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-progress">
+      <span class="answered" id="answeredCount">0</span> / <span class="total">30 repondues</span>
+    </div>
+    <div class="status-score" id="statusScore">SCORE : -</div>
+  </div>
+
+  <form id="qcmForm">
+
+    <h2 class="block-title"><span class="block-num">BLOC 01</span>Fondamentaux de la virtualisation</h2>
+
+    <div class="question" data-q="1" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q01</span>
+        <p class="q-text">Quelle est la définition correcte de la virtualisation dans le contexte des infrastructures informatiques modernes ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q1" value="1"><span><span class="option-letter">A.</span>Technologie permettant de créer des versions virtuelles de ressources physiques comme des serveurs ou du stockage</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q1" value="2"><span><span class="option-letter">B.</span>Méthode de sauvegarde des données sur des supports physiques externes pour la reprise après sinistre</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q1" value="3"><span><span class="option-letter">C.</span>Protocole réseau permettant la communication sécurisée entre plusieurs ordinateurs distants</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q1" value="4"><span><span class="option-letter">D.</span>Logiciel antivirus protégeant les serveurs physiques contre les attaques informatiques externes</span></label>
+      </div>
+      <div class="justification">La virtualisation crée des couches d'abstraction logicielles au-dessus du matériel physique pour simuler des ressources indépendantes.</div>
+    </div>
+
+    <div class="question" data-q="2" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q02</span>
+        <p class="q-text">Quel est l'un des principaux avantages de la virtualisation pour les entreprises qui gèrent des serveurs physiques ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q2" value="1"><span><span class="option-letter">A.</span>Elle élimine complètement le besoin de matériel informatique physique dans l'entreprise</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q2" value="2"><span><span class="option-letter">B.</span>Elle permet de faire tourner plusieurs systèmes d'exploitation sur une seule machine physique</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q2" value="3"><span><span class="option-letter">C.</span>Elle rend les serveurs physiques totalement invulnérables aux pannes matérielles</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q2" value="4"><span><span class="option-letter">D.</span>Elle supprime le besoin d'un système d'exploitation sur chaque machine virtuelle</span></label>
+      </div>
+      <div class="justification">Un serveur physique héberge plusieurs VM indépendantes. La virtualisation nécessite toujours du matériel physique en dessous.</div>
+    </div>
+
+    <div class="question" data-q="3" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q03</span>
+        <p class="q-text">Quel pourcentage d'utilisation des ressources d'un serveur physique peut-on atteindre grâce à la virtualisation ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q3" value="1"><span><span class="option-letter">A.</span>30 à 40 % car la virtualisation consomme beaucoup de ressources supplémentaires</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q3" value="2"><span><span class="option-letter">B.</span>100 % car la virtualisation exploite absolument toutes les ressources du serveur</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q3" value="3"><span><span class="option-letter">C.</span>70 à 80 % d'utilisation des ressources au lieu de 10 à 20 % sans virtualisation</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q3" value="4"><span><span class="option-letter">D.</span>10 à 20 % car la virtualisation ne modifie pas le taux d'utilisation des serveurs</span></label>
+      </div>
+      <div class="justification">Un serveur non virtualisé n'utilise que 10-20 % de sa capacité. La virtualisation permet d'atteindre 70-80 %.</div>
+    </div>
+
+    <div class="question" data-q="4" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q04</span>
+        <p class="q-text">Comment appelle-t-on le serveur physique qui héberge les machines virtuelles dans une architecture virtualisée ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q4" value="1"><span><span class="option-letter">A.</span>Le contrôleur de domaine principal du réseau de l'entreprise</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q4" value="2"><span><span class="option-letter">B.</span>La machine invitée ou Guest qui exécute les applications métier</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q4" value="3"><span><span class="option-letter">C.</span>La machine hôte ou Host qui fournit les ressources matérielles réelles</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q4" value="4"><span><span class="option-letter">D.</span>Le serveur de sauvegarde centralisé qui stocke les images des VM</span></label>
+      </div>
+      <div class="justification">Le Host est le serveur physique avec le CPU, la RAM et le stockage réels, sur lequel s'exécute l'hyperviseur. Le Guest, c'est la VM elle-même.</div>
+    </div>
+
+    <div class="question" data-q="5" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q05</span>
+        <p class="q-text">Quel composant logiciel s'exécute sur le serveur physique et permet de créer et gérer les machines virtuelles ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q5" value="1"><span><span class="option-letter">A.</span>Le système d'exploitation de la machine invitée qui gère ses propres ressources virtuelles</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q5" value="2"><span><span class="option-letter">B.</span>Le BIOS du serveur physique qui alloue directement les ressources aux applications</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q5" value="3"><span><span class="option-letter">C.</span>L'hyperviseur qui partage les ressources physiques entre toutes les machines virtuelles</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q5" value="4"><span><span class="option-letter">D.</span>Le pilote de la carte réseau du serveur qui distribue la connectivité réseau</span></label>
+      </div>
+      <div class="justification">L'hyperviseur est la couche logicielle clé qui crée, gère et isole les VM en répartissant les ressources du serveur.</div>
+    </div>
+
+    <div class="question" data-q="6" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q06</span>
+        <p class="q-text">Quelle affirmation décrit correctement le principe d'isolation des machines virtuelles sur un même serveur physique ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q6" value="1"><span><span class="option-letter">A.</span>Toutes les VM partagent le même système d'exploitation et les mêmes fichiers système</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q6" value="2"><span><span class="option-letter">B.</span>Si une VM plante, les autres machines virtuelles continuent de fonctionner normalement</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q6" value="3"><span><span class="option-letter">C.</span>Une panne sur une VM entraîne automatiquement l'arrêt de toutes les autres VM du serveur</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q6" value="4"><span><span class="option-letter">D.</span>Les VM ne peuvent jamais fonctionner simultanément sur le même serveur physique</span></label>
+      </div>
+      <div class="justification">L'isolation est un avantage clé : chaque VM est indépendante, un crash n'affecte pas les autres. Le partage d'OS, c'est le principe des conteneurs (Docker), pas des VM.</div>
+    </div>
+
+    <div class="question" data-q="7" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q07</span>
+        <p class="q-text">Quel avantage environnemental la virtualisation apporte-t-elle aux entreprises qui gèrent de grandes infrastructures IT ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q7" value="1"><span><span class="option-letter">A.</span>L'élimination complète de la consommation électrique de tous les datacenters de l'entreprise</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q7" value="2"><span><span class="option-letter">B.</span>La réduction de l'empreinte carbone grâce à moins de serveurs physiques en fonctionnement</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q7" value="3"><span><span class="option-letter">C.</span>La suppression totale du besoin de climatisation dans les salles serveurs virtualisées</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q7" value="4"><span><span class="option-letter">D.</span>Le remplacement de tous les câbles réseau physiques par des connexions sans fil</span></label>
+      </div>
+      <div class="justification">Moins de serveurs physiques = moins d'électricité, moins de climatisation, donc empreinte carbone réduite. Attention aux mots absolus dans les distracteurs.</div>
+    </div>
+
+    <div class="question" data-q="8" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q08</span>
+        <p class="q-text">Quels éléments virtuels possède chaque machine virtuelle de manière indépendante dans une architecture de virtualisation ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q8" value="1"><span><span class="option-letter">A.</span>Son propre processeur physique dédié et sa propre alimentation électrique séparée</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q8" value="2"><span><span class="option-letter">B.</span>Son propre système d'exploitation, ses applications et ses ressources virtuelles allouées</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q8" value="3"><span><span class="option-letter">C.</span>Sa propre connexion Internet physique indépendante de la connexion réseau de l'hôte</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q8" value="4"><span><span class="option-letter">D.</span>Son propre disque dur physique installé séparément dans le châssis du serveur</span></label>
+      </div>
+      <div class="justification">Chaque VM dispose de son OS, ses vCPU, sa RAM virtuelle, son disque virtuel (.vdi, .vmdk) et ses interfaces réseau virtuelles. Tout est virtuel.</div>
+    </div>
+
+    <div class="question" data-q="9" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q09</span>
+        <p class="q-text">Quel pourcentage de réduction des coûts d'infrastructure peut-on obtenir grâce à la virtualisation en entreprise ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q9" value="1"><span><span class="option-letter">A.</span>De 50 à 70 % de réduction sur les coûts de matériel, électricité et maintenance</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q9" value="2"><span><span class="option-letter">B.</span>De 10 à 20 % de réduction uniquement sur les coûts de licences logicielles</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q9" value="3"><span><span class="option-letter">C.</span>De 90 à 100 % car la virtualisation élimine tous les coûts d'infrastructure</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q9" value="4"><span><span class="option-letter">D.</span>Aucune réduction significative car les coûts de licences compensent les économies matérielles</span></label>
+      </div>
+      <div class="justification">La virtualisation réduit significativement les coûts en consolidant les serveurs : 50-70 % sur le matériel, l'énergie et la maintenance.</div>
+    </div>
+
+    <div class="question" data-q="10" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q10</span>
+        <p class="q-text">Quel pourcentage des serveurs d'entreprise sont actuellement virtualisés selon les études du marché citées dans le cours ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q10" value="1"><span><span class="option-letter">A.</span>Environ 90 % des serveurs d'entreprise sont virtualisés selon les études Gartner</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q10" value="2"><span><span class="option-letter">B.</span>Environ 30 % car la majorité des entreprises préfèrent les serveurs physiques</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q10" value="3"><span><span class="option-letter">C.</span>Environ 50 % avec une répartition égale entre serveurs physiques et virtuels</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q10" value="4"><span><span class="option-letter">D.</span>Moins de 10 % car la virtualisation est réservée aux très grandes entreprises</span></label>
+      </div>
+      <div class="justification">Environ 90 % des serveurs d'entreprise sont virtualisés (source Gartner).</div>
+    </div>
+
+
+    <h2 class="block-title"><span class="block-num">BLOC 02</span>Types d'hyperviseurs</h2>
+
+    <div class="question" data-q="11" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q11</span>
+        <p class="q-text">Comment appelle-t-on un hyperviseur qui s'installe directement sur le matériel physique sans système d'exploitation intermédiaire ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q11" value="1"><span><span class="option-letter">A.</span>Un hyperviseur de Type 1 aussi appelé bare-metal car il touche directement le matériel</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q11" value="2"><span><span class="option-letter">B.</span>Un hyperviseur de Type 2 aussi appelé hosted car il est hébergé sur un OS</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q11" value="3"><span><span class="option-letter">C.</span>Un hyperviseur de Type 3 aussi appelé cloud-native pour les environnements cloud</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q11" value="4"><span><span class="option-letter">D.</span>Un hyperviseur de Type 0 aussi appelé firmware car il est intégré au BIOS</span></label>
+      </div>
+      <div class="justification">Le Type 1 s'installe directement sur le hardware sans OS hôte. Bare-metal = "métal nu". Type 3 et Type 0 n'existent pas.</div>
+    </div>
+
+    <div class="question" data-q="12" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q12</span>
+        <p class="q-text">Comment appelle-t-on un hyperviseur qui s'installe comme une application sur un système d'exploitation déjà existant ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q12" value="1"><span><span class="option-letter">A.</span>Un hyperviseur de Type 1 aussi appelé bare-metal qui accède directement au matériel</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q12" value="2"><span><span class="option-letter">B.</span>Un hyperviseur de Type 2 aussi appelé hosted car il s'exécute sur un système hôte</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q12" value="3"><span><span class="option-letter">C.</span>Un hyperviseur de Type 3 aussi appelé embedded pour les systèmes embarqués</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q12" value="4"><span><span class="option-letter">D.</span>Un hyperviseur de Type 0 aussi appelé standalone qui fonctionne sans aucun support</span></label>
+      </div>
+      <div class="justification">Le Type 2 (hosted) fonctionne comme une application classique sur Windows, macOS ou Linux. Exemple : VirtualBox.</div>
+    </div>
+
+    <div class="question" data-q="13" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q13</span>
+        <p class="q-text">Lequel de ces logiciels est un hyperviseur de Type 1 utilisé principalement dans les datacenters des grandes entreprises ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q13" value="1"><span><span class="option-letter">A.</span>Oracle VirtualBox qui s'installe gratuitement sur Windows, macOS ou Linux comme application</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q13" value="2"><span><span class="option-letter">B.</span>Parallels Desktop qui est spécialement conçu pour les ordinateurs Mac d'Apple</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q13" value="3"><span><span class="option-letter">C.</span>VMware ESXi qui s'installe directement sur le matériel du serveur sans OS intermédiaire</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q13" value="4"><span><span class="option-letter">D.</span>VMware Fusion qui s'installe comme application de bureau sur le système macOS</span></label>
+      </div>
+      <div class="justification">ESXi est le Type 1 le plus répandu en entreprise. Les trois autres (VirtualBox, Parallels, Fusion) sont des Type 2.</div>
+    </div>
+
+    <div class="question" data-q="14" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q14</span>
+        <p class="q-text">Pourquoi les hyperviseurs de Type 1 offrent-ils de meilleures performances que les hyperviseurs de Type 2 en production ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q14" value="1"><span><span class="option-letter">A.</span>Parce qu'ils accèdent directement au matériel sans couche de système d'exploitation intermédiaire</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q14" value="2"><span><span class="option-letter">B.</span>Parce qu'ils sont toujours plus récents et mieux optimisés que les hyperviseurs de Type 2</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q14" value="3"><span><span class="option-letter">C.</span>Parce qu'ils utilisent exclusivement des processeurs Intel plus performants que les AMD</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q14" value="4"><span><span class="option-letter">D.</span>Parce qu'ils limitent automatiquement le nombre de machines virtuelles à une seule par serveur</span></label>
+      </div>
+      <div class="justification">Sans couche d'OS hôte entre l'hyperviseur et le matériel, les VM accèdent plus directement au CPU, à la RAM et au stockage.</div>
+    </div>
+
+    <div class="question" data-q="15" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q15</span>
+        <p class="q-text">Quel hyperviseur de Type 2 est entièrement gratuit, open-source et disponible sur Windows, macOS et Linux ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q15" value="1"><span><span class="option-letter">A.</span>VMware ESXi qui est le leader du marché des hyperviseurs pour les datacenters entreprise</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q15" value="2"><span><span class="option-letter">B.</span>Microsoft Hyper-V qui est intégré directement dans les éditions de Windows Server</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q15" value="3"><span><span class="option-letter">C.</span>Oracle VirtualBox qui est multi-plateforme, open-source et gratuit pour tous les usages</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q15" value="4"><span><span class="option-letter">D.</span>Citrix XenServer qui est la solution de virtualisation utilisée par Amazon Web Services</span></label>
+      </div>
+      <div class="justification">VirtualBox est l'hyperviseur Type 2 gratuit, open-source et multi-plateforme par excellence. C'est celui qu'on a installé en TP.</div>
+    </div>
+
+    <div class="question" data-q="16" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q16</span>
+        <p class="q-text">Quel est l'usage typique recommandé pour un hyperviseur de Type 2 dans un contexte professionnel en entreprise ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q16" value="1"><span><span class="option-letter">A.</span>L'hébergement de serveurs de production critiques dans un datacenter haute disponibilité</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q16" value="2"><span><span class="option-letter">B.</span>Le développement, les tests et la formation sur les ordinateurs existants des collaborateurs</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q16" value="3"><span><span class="option-letter">C.</span>La gestion de milliers de machines virtuelles dans une infrastructure cloud publique</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q16" value="4"><span><span class="option-letter">D.</span>Le déploiement d'infrastructures critiques nécessitant une haute disponibilité permanente</span></label>
+      </div>
+      <div class="justification">Les Type 2 sont parfaits pour dev / test / formation sur un poste de travail. La production, c'est du Type 1.</div>
+    </div>
+
+    <div class="question" data-q="17" data-correct="4">
+      <div class="question-header">
+        <span class="q-num">Q17</span>
+        <p class="q-text">Quel inconvénient majeur est associé aux hyperviseurs de Type 1 par rapport aux hyperviseurs de Type 2 ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q17" value="1"><span><span class="option-letter">A.</span>Ils ne supportent pas les processeurs modernes avec les technologies de virtualisation matérielle</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q17" value="2"><span><span class="option-letter">B.</span>Ils sont toujours plus lents car ils utilisent une double couche de virtualisation logicielle</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q17" value="3"><span><span class="option-letter">C.</span>Ils ne peuvent exécuter que des machines virtuelles avec un système d'exploitation Linux</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q17" value="4"><span><span class="option-letter">D.</span>Ils nécessitent du matériel dédié, une configuration complexe et des licences souvent coûteuses</span></label>
+      </div>
+      <div class="justification">Le coût des licences (VMware), la complexité de mise en oeuvre et le besoin de matériel dédié sont les principaux inconvénients du Type 1.</div>
+    </div>
+
+    <div class="question" data-q="18" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q18</span>
+        <p class="q-text">Quel hyperviseur de Type 1 est une solution open-source basée sur KVM, très populaire chez les hébergeurs web ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q18" value="1"><span><span class="option-letter">A.</span>VMware Workstation qui est la version bureau de VMware pour développeurs professionnels</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q18" value="2"><span><span class="option-letter">B.</span>Proxmox VE qui est gratuit, open-source et basé sur Debian Linux avec KVM</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q18" value="3"><span><span class="option-letter">C.</span>Parallels Desktop qui est optimisé spécifiquement pour les ordinateurs Mac Apple Silicon</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q18" value="4"><span><span class="option-letter">D.</span>VMware Fusion qui est dédié uniquement aux ordinateurs Mac</span></label>
+      </div>
+      <div class="justification">Proxmox VE = open-source, basé sur Debian + KVM, gratuit, très utilisé par les hébergeurs.</div>
+    </div>
+
+    <div class="question" data-q="19" data-correct="3">
+      <div class="question-header">
+        <span class="q-num">Q19</span>
+        <p class="q-text">Quel hyperviseur est spécifiquement conçu et optimisé pour fonctionner sur les Mac avec puces Apple Silicon (M1, M2, M3) ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q19" value="1"><span><span class="option-letter">A.</span>VMware ESXi qui est le leader du marché des hyperviseurs pour les datacenters professionnels</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q19" value="2"><span><span class="option-letter">B.</span>Microsoft Hyper-V qui est disponible dans Windows Server et Windows 10/11 Pro</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q19" value="3"><span><span class="option-letter">C.</span>Parallels Desktop qui est la solution de virtualisation recommandée pour macOS ARM</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q19" value="4"><span><span class="option-letter">D.</span>Citrix XenServer qui est utilisé principalement dans les infrastructures cloud publiques</span></label>
+      </div>
+      <div class="justification">Parallels Desktop est optimisé nativement pour Apple Silicon. Sur Mac M1/M2/M3, c'est lui qui offre les meilleures perfs.</div>
+    </div>
+
+    <div class="question" data-q="20" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q20</span>
+        <p class="q-text">Quelle est la part de marché approximative de VMware ESXi dans les grandes entreprises du classement Fortune 500 ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q20" value="1"><span><span class="option-letter">A.</span>Environ 20 % car les entreprises préfèrent Proxmox qui est entièrement gratuit</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q20" value="2"><span><span class="option-letter">B.</span>Environ 75 % des entreprises du Fortune 500 utilisent VMware pour leur virtualisation</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q20" value="3"><span><span class="option-letter">C.</span>Environ 50 % avec une répartition parfaitement égale avec Microsoft Hyper-V</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q20" value="4"><span><span class="option-letter">D.</span>Environ 5 % car les grandes entreprises développent leurs propres solutions internes</span></label>
+      </div>
+      <div class="justification">VMware domine le marché entreprise avec environ 75 % de part de marché parmi les grandes entreprises Fortune 500.</div>
+    </div>
+
+
+    <h2 class="block-title"><span class="block-num">BLOC 03</span>Installation et configuration de VirtualBox</h2>
+
+    <div class="question" data-q="21" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q21</span>
+        <p class="q-text">Quelle commande PowerShell permet de vérifier si la virtualisation matérielle est activée sur un ordinateur Windows ?</p>
+      </div>
+      <div class="q-codehint">systeminfo | findstr /i "virtualization"</div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q21" value="1"><span><span class="option-letter">A.</span>systeminfo avec findstr recherche les lignes contenant "virtualization" dans les informations système Windows</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q21" value="2"><span><span class="option-letter">B.</span>Cette commande installe automatiquement les pilotes de virtualisation nécessaires sur Windows</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q21" value="3"><span><span class="option-letter">C.</span>Cette commande active automatiquement la virtualisation Intel VT-x dans le BIOS du PC</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q21" value="4"><span><span class="option-letter">D.</span>Cette commande désactive Hyper-V pour permettre l'utilisation de VirtualBox sur Windows</span></label>
+      </div>
+      <div class="justification">La commande LIT les informations système. Le pipe envoie la sortie à findstr qui filtre les lignes contenant "virtualization". Aucune commande depuis l'OS ne peut modifier le BIOS.</div>
+    </div>
+
+    <div class="question" data-q="22" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q22</span>
+        <p class="q-text">Quelle commande permet de vérifier la version de VirtualBox actuellement installée en ligne de commande ?</p>
+      </div>
+      <div class="q-codehint">VBoxManage --version</div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q22" value="1"><span><span class="option-letter">A.</span>VBoxManage avec l'option --version affiche le numéro de version de VirtualBox installée</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q22" value="2"><span><span class="option-letter">B.</span>Cette commande lance directement l'interface graphique de VirtualBox Manager</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q22" value="3"><span><span class="option-letter">C.</span>Cette commande télécharge et installe automatiquement la dernière version de VirtualBox</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q22" value="4"><span><span class="option-letter">D.</span>Cette commande supprime la version actuelle de VirtualBox installée sur le système</span></label>
+      </div>
+      <div class="justification">VBoxManage est l'outil CLI de VirtualBox. --version affiche la version. La commande est en lecture seule.</div>
+    </div>
+
+    <div class="question" data-q="23" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q23</span>
+        <p class="q-text">Comment s'appelle la technologie Intel qui doit être activée dans le BIOS pour exécuter des VM en 64-bit ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q23" value="1"><span><span class="option-letter">A.</span>Intel VT-x qui est la technologie de virtualisation matérielle des processeurs Intel</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q23" value="2"><span><span class="option-letter">B.</span>Intel Turbo Boost qui augmente automatiquement la fréquence du processeur sous charge</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q23" value="3"><span><span class="option-letter">C.</span>Intel Hyper-Threading qui double le nombre de threads disponibles par cœur physique</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q23" value="4"><span><span class="option-letter">D.</span>Intel Smart Cache qui optimise la mémoire cache partagée entre les cœurs du processeur</span></label>
+      </div>
+      <div class="justification">VT-x (Virtualization Technology) = support matériel Intel pour la virtualisation. L'équivalent AMD est AMD-V (ou SVM).</div>
+    </div>
+
+    <div class="question" data-q="24" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q24</span>
+        <p class="q-text">Que fournit le VirtualBox Extension Pack en complément de l'installation de base de VirtualBox ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q24" value="1"><span><span class="option-letter">A.</span>Le support USB 2.0 et 3.0, le chiffrement de disque, le démarrage PXE et l'accès distant RDP</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q24" value="2"><span><span class="option-letter">B.</span>Un système d'exploitation Ubuntu préinstallé directement dans une VM prête à l'emploi</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q24" value="3"><span><span class="option-letter">C.</span>Un antivirus intégré pour analyser et protéger toutes les machines virtuelles automatiquement</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q24" value="4"><span><span class="option-letter">D.</span>Une connexion VPN automatique pour sécuriser le réseau de toutes les machines virtuelles</span></label>
+      </div>
+      <div class="justification">L'Extension Pack ajoute : USB 2.0/3.0, chiffrement AES, boot PXE Intel, accès distant RDP. Gratuit pour usage personnel et éducatif.</div>
+    </div>
+
+    <div class="question" data-q="25" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q25</span>
+        <p class="q-text">Quelle commande Linux permet de vérifier si le processeur supporte la virtualisation matérielle Intel VT-x ou AMD-V ?</p>
+      </div>
+      <div class="q-codehint">egrep -c '(vmx|svm)' /proc/cpuinfo</div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q25" value="1"><span><span class="option-letter">A.</span>egrep cherche vmx pour Intel ou svm pour AMD dans le fichier /proc/cpuinfo du processeur</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q25" value="2"><span><span class="option-letter">B.</span>Cette commande installe les modules de virtualisation KVM nécessaires sur le système Linux</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q25" value="3"><span><span class="option-letter">C.</span>Cette commande active automatiquement la virtualisation dans le BIOS depuis le système Linux</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q25" value="4"><span><span class="option-letter">D.</span>Cette commande affiche la liste complète des machines virtuelles en cours d'exécution sur KVM</span></label>
+      </div>
+      <div class="justification">vmx = Intel VT-x, svm = AMD-V (Secure Virtual Machine). Un résultat supérieur à 0 signifie que la virtualisation est supportée. Commande en lecture seule.</div>
+    </div>
+
+    <div class="question" data-q="26" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q26</span>
+        <p class="q-text">Quelle est la règle d'or concernant l'allocation de mémoire RAM aux machines virtuelles sur un serveur hôte ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q26" value="1"><span><span class="option-letter">A.</span>Ne jamais allouer plus de 50 à 60 % de la RAM totale aux machines virtuelles</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q26" value="2"><span><span class="option-letter">B.</span>Toujours allouer 100 % de la RAM disponible pour maximiser les performances des VM</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q26" value="3"><span><span class="option-letter">C.</span>Allouer exactement 25 % de la RAM à chaque machine virtuelle créée sur l'hôte</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q26" value="4"><span><span class="option-letter">D.</span>La quantité de RAM n'a aucune importance car les VM utilisent uniquement le disque dur</span></label>
+      </div>
+      <div class="justification">Toujours garder 40-50 % de la RAM pour le système hôte et l'hyperviseur. Dépasser cause des ralentissements (swap, freeze).</div>
+    </div>
+
+    <div class="question" data-q="27" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q27</span>
+        <p class="q-text">Quelle est la différence entre un disque virtuel dynamiquement alloué et un disque à taille fixe dans VirtualBox ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q27" value="1"><span><span class="option-letter">A.</span>Le disque dynamique est toujours plus rapide car il pré-alloue immédiatement tout l'espace disque</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q27" value="2"><span><span class="option-letter">B.</span>Le disque dynamique grandit au fur et à mesure des besoins tandis que le fixe occupe immédiatement toute la taille</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q27" value="3"><span><span class="option-letter">C.</span>Le disque fixe ne peut pas dépasser 10 Go alors que le disque dynamique est totalement illimité</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q27" value="4"><span><span class="option-letter">D.</span>Il n'existe aucune différence pratique entre ces deux types de disques virtuels dans VirtualBox</span></label>
+      </div>
+      <div class="justification">Un disque dynamique de 20 GB n'occupe sur l'hôte que l'espace réellement utilisé. Un disque fixe crée immédiatement un fichier de 20 GB, légèrement plus rapide mais gourmand.</div>
+    </div>
+
+    <div class="question" data-q="28" data-correct="1">
+      <div class="question-header">
+        <span class="q-num">Q28</span>
+        <p class="q-text">Quelle commande permet d'ajouter un utilisateur Linux au groupe vboxusers nécessaire pour les périphériques USB ?</p>
+      </div>
+      <div class="q-codehint">sudo usermod -aG vboxusers $USER</div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q28" value="1"><span><span class="option-letter">A.</span>usermod avec -aG ajoute l'utilisateur courant au groupe vboxusers sans supprimer ses autres groupes</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q28" value="2"><span><span class="option-letter">B.</span>Cette commande supprime l'utilisateur du système et recrée un nouveau compte appelé vboxusers</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q28" value="3"><span><span class="option-letter">C.</span>Cette commande installe VirtualBox et tous ses pilotes nécessaires automatiquement sur Linux</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q28" value="4"><span><span class="option-letter">D.</span>Cette commande désactive tous les périphériques USB sur la machine hôte Linux définitivement</span></label>
+      </div>
+      <div class="justification">Le flag -a (append) ajoute au groupe sans retirer les groupes existants. -G spécifie le groupe. $USER est le login courant. Sans le -a, on perdrait tous les autres groupes.</div>
+    </div>
+
+    <div class="question" data-q="29" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q29</span>
+        <p class="q-text">Quel format de fichier de disque dur virtuel est le format natif et spécifique à Oracle VirtualBox ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q29" value="1"><span><span class="option-letter">A.</span>Le format VMDK qui est le format natif de VMware utilisé par ESXi et Workstation</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q29" value="2"><span><span class="option-letter">B.</span>Le format VDI qui signifie VirtualBox Disk Image et qui est spécifique à VirtualBox</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q29" value="3"><span><span class="option-letter">C.</span>Le format VHD qui est le format natif de Microsoft Hyper-V pour les disques virtuels</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q29" value="4"><span><span class="option-letter">D.</span>Le format ISO qui est utilisé pour les images d'installation des systèmes d'exploitation</span></label>
+      </div>
+      <div class="justification">VDI = format natif VirtualBox. VMDK = VMware. VHD/VHDX = Hyper-V. ISO = image CD/DVD (pas un disque dur virtuel).</div>
+    </div>
+
+    <div class="question" data-q="30" data-correct="2">
+      <div class="question-header">
+        <span class="q-num">Q30</span>
+        <p class="q-text">Combien de cœurs CPU maximum devrait-on allouer aux VM sur un ordinateur personnel ayant 4 cœurs physiques ?</p>
+      </div>
+      <div class="options">
+        <label class="option" data-opt="1"><input type="radio" name="q30" value="1"><span><span class="option-letter">A.</span>Les 4 cœurs car la virtualisation ne consomme pas de ressources processeur sur le système hôte</span></label>
+        <label class="option" data-opt="2"><input type="radio" name="q30" value="2"><span><span class="option-letter">B.</span>Maximum 2 à 3 cœurs pour garder une marge de fonctionnement correcte pour le système hôte</span></label>
+        <label class="option" data-opt="3"><input type="radio" name="q30" value="3"><span><span class="option-letter">C.</span>Un seul cœur car les machines virtuelles ne peuvent utiliser qu'un seul processeur à la fois</span></label>
+        <label class="option" data-opt="4"><input type="radio" name="q30" value="4"><span><span class="option-letter">D.</span>8 cœurs virtuels car la virtualisation double automatiquement le nombre de cœurs disponibles</span></label>
+      </div>
+      <div class="justification">Règle : max 50-75 % des cœurs aux VM. Sur 4 cœurs, cela donne 2 à 3 cœurs pour les VM, en gardant une marge pour l'hôte.</div>
+    </div>
+
+  </form>
+
+  <div class="actions">
+    <button type="button" id="btnReset" class="primary">Réinitialiser le QCM</button>
+  </div>
+
+  <div class="final-result" id="finalResult">
+    <div class="final-score" id="finalScore">- / 30</div>
+    <div class="final-percent" id="finalPercent">0 %</div>
+    <div class="final-tier" id="finalTier"></div>
+    <div class="final-breakdown">
+      <div>
+        <div class="bk-block">Bloc 01 · Fondamentaux</div>
+        <div class="bk-score" id="bk1">- / 10</div>
+      </div>
+      <div>
+        <div class="bk-block">Bloc 02 · Hyperviseurs</div>
+        <div class="bk-score" id="bk2">- / 10</div>
+      </div>
+      <div>
+        <div class="bk-block">Bloc 03 · VirtualBox</div>
+        <div class="bk-score" id="bk3">- / 10</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Yassine El Azzati · 1VRT2 · Virtualisation · QCM de revision · Jour 1</div>
+
+</main>
+
+<script>
+(function() {
+  'use strict';
+  var form = document.getElementById('qcmForm');
+  var questions = form.querySelectorAll('.question');
+  var answeredCount = document.getElementById('answeredCount');
+  var statusScore = document.getElementById('statusScore');
+  var btnReset = document.getElementById('btnReset');
+  var finalResult = document.getElementById('finalResult');
+  var finalScore = document.getElementById('finalScore');
+  var finalPercent = document.getElementById('finalPercent');
+  var finalTier = document.getElementById('finalTier');
+  var bk = [document.getElementById('bk1'), document.getElementById('bk2'), document.getElementById('bk3')];
+
+  var TOTAL_Q = questions.length;
+  var blockScores = [0, 0, 0];
+  var globalScore = 0;
+  var answeredQuestions = 0;
+
+  // Correction instantanée au changement d'une réponse
+  form.addEventListener('change', function(event) {
+    var radio = event.target;
+    if (!radio || radio.type !== 'radio') return;
+
+    var question = radio.closest('.question');
+    if (!question || question.classList.contains('validated')) return;
+
+    var correct = parseInt(question.dataset.correct, 10);
+    var qNum    = parseInt(question.dataset.q, 10);
+    var userVal = parseInt(radio.value, 10);
+
+    // Verrouiller la question pour éviter de re-cliquer
+    question.classList.add('validated', 'answered');
+
+    // Marquer la bonne réponse
+    var correctOpt = question.querySelector('.option[data-opt="' + correct + '"]');
+    if (correctOpt) correctOpt.classList.add('is-correct');
+
+    // Si réponse fausse : marquer la mauvaise réponse de l'utilisateur
+    if (userVal !== correct) {
+      var userOpt = question.querySelector('.option[data-opt="' + userVal + '"]');
+      if (userOpt) userOpt.classList.add('is-wrong');
+      question.classList.add('wrong');
+    } else {
+      question.classList.add('correct');
+      globalScore++;
+      var blockIdx = Math.floor((qNum - 1) / 10);
+      blockScores[blockIdx]++;
+    }
+
+    answeredQuestions++;
+    updateLiveScore();
+
+    // Si on vient de répondre à la dernière, afficher le résumé final
+    if (answeredQuestions === TOTAL_Q) {
+      showFinalSummary();
+    }
+  });
+
+  function updateLiveScore() {
+    answeredCount.textContent = answeredQuestions;
+    statusScore.textContent = 'SCORE : ' + globalScore + ' / ' + answeredQuestions;
+    statusScore.classList.add('visible');
+
+    var pct = answeredQuestions > 0 ? Math.round((globalScore / answeredQuestions) * 100) : 0;
+    statusScore.classList.remove('bad');
+    if (answeredQuestions >= 5 && pct < 60) statusScore.classList.add('bad');
+  }
+
+  function showFinalSummary() {
+    finalScore.textContent = globalScore + ' / ' + TOTAL_Q;
+    var pct = Math.round((globalScore / TOTAL_Q) * 100);
+    finalPercent.textContent = pct + ' %';
+
+    var tier = '';
+    if (pct >= 90)      tier = 'Excellent - maitrise complete du Jour 1.';
+    else if (pct >= 75) tier = 'Tres bon niveau - quelques points a consolider.';
+    else if (pct >= 60) tier = 'Niveau correct - relisez les chapitres faibles.';
+    else if (pct >= 40) tier = 'Encore du travail - reprenez le support du Jour 1.';
+    else                tier = 'A retravailler en profondeur. Reprenez le cours depuis le debut.';
+    finalTier.textContent = tier;
+
+    bk[0].textContent = blockScores[0] + ' / 10';
+    bk[1].textContent = blockScores[1] + ' / 10';
+    bk[2].textContent = blockScores[2] + ' / 10';
+
+    finalResult.classList.add('visible');
+    finalResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  btnReset.addEventListener('click', function() {
+    form.reset();
+    questions.forEach(function(q) {
+      q.classList.remove('answered', 'validated', 'correct', 'wrong');
+      q.querySelectorAll('.option').forEach(function(o) {
+        o.classList.remove('selected', 'is-correct', 'is-wrong');
+      });
+    });
+    finalResult.classList.remove('visible');
+    statusScore.textContent = 'SCORE : -';
+    statusScore.classList.remove('visible', 'bad');
+    answeredCount.textContent = '0';
+    blockScores = [0, 0, 0];
+    globalScore = 0;
+    answeredQuestions = 0;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+
+</body>
+</html>
